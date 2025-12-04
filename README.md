@@ -1,52 +1,148 @@
-# Rocket.Chat Poll App
+# Enhanced Polls App for Rocket.Chat
 
-## Compatibility table
-
-Poll Version | Minimum Rocket.Chat Version
------------- | -------------
-v2.x+ | **3.0.0**
-v1.x | **0.74.1**
+A feature-rich polling application for Rocket.Chat with visual charts, multi-round voting, anonymous polls, and export capabilities.
 
 ## Features
 
-- As many options as you want
-- Single/multiple choices
-- Confidential votes (don't show who voted for what)
-- Hide results until the poll is finished
+- **Visual Vote Charts** - Clean bar graphs showing vote distribution
+- **Multi-Round Voting** - Run elimination-style polls with multiple rounds
+- **Anonymous Polls** - Hide voter identities for confidential voting
+- **Vote Controls** - Single or multiple choice, allow/block vote changes
+- **Duration Limits** - Auto-close polls after a set time
+- **Export Results** - Download results as CSV or JSON
+- **Real-time Updates** - Vote counts update instantly
 
-## Installing
+## Installation
 
-Rocket.Chat Poll App is provided via Rocket.Chat Marketplace https://rocket.chat/marketplace . To install it on your Rocket.Chat server, go to the Admin area, then Marketplace and search for `Poll`, click `Install` and you're ready to go.
+### Prerequisites
+- Rocket.Chat server (v3.0+)
+- Apps-Engine enabled
+- Node.js 14+ and npm
 
-## How to use it
-
-Use the slash command to create a poll:
-
-```
-/poll What is your favorite color?
-```
-
-Fill the form:
-
-![image](https://user-images.githubusercontent.com/8591547/74581666-9d3b1000-4f90-11ea-9112-7a85a771a04b.png)
-
-The following poll will be created:
-
-![image](https://user-images.githubusercontent.com/8591547/74581679-c065bf80-4f90-11ea-8e51-cd63b8ac7cd8.png)
-
-## Contributing
-
-You'll need to set up the Rocket.Chat Apps dev environment, please see https://developer.rocket.chat/apps-engine/getting-started
-
-To install the using the command line, you have to turn on the setting `Enable development mode` on the Rocket.Chat server under `Admin > General > Apps`.
-
-Change the values from [.rcappsconfig](.rcappsconfig) to reflect your dev environment.
-
-Then you can clone this repo and then:
+### Deploy the App
 
 ```bash
+# Clone the repository
+git clone <repo-url>
+cd rocket.chat.app-poll
+
+# Install dependencies
 npm install
-rc-apps deploy
+
+# Deploy to your Rocket.Chat server
+rc-apps deploy --url http://your-server:3000 --username admin --password yourpass --update
 ```
 
-Follow the instructions and when you're done, the app will be installed on your Rocket.Chat server.
+## Usage
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `/poll` | Open the poll creation form |
+| `/poll help` | Show help message with usage tips |
+| `/poll export <poll-id>` | Export poll results to your DM |
+
+### Creating a Poll
+
+1. Type `/poll` in any channel or DM
+2. Fill in the poll question
+3. Add at least 2 options
+4. Configure settings:
+   - **Vote Mode**: Single or multiple choice
+   - **Visibility**: Open (show voters) or Anonymous
+   - **Results**: Show always or only after close
+   - **Change Vote**: Allow or block vote changes
+   - **Duration**: No limit, 5 min, 15 min, 1 hour, 1 day
+5. Click "Create"
+
+### Multi-Round Voting
+
+For elimination-style polls (like voting shows):
+
+1. Set "Rounds" to 2, 3, or 4
+2. Set "Keep per round" to specify how many options survive
+3. Click "Next Round" to eliminate bottom options
+4. Continue until final round
+
+### Poll Actions
+
+| Button | Description |
+|--------|-------------|
+| Vote | Cast your vote on an option |
+| View Results | Open detailed results modal |
+| Close Poll | End the poll (creator only) |
+| Next Round | Advance multi-round poll |
+| Export | Download results as CSV/JSON |
+
+## Poll Card Layout
+
+```
+**What's your favorite color?**
+
+LIVE  •  Single choice  •  Round 1/3  •  15 votes
+────────────────────────────────────────
+Red                                [Vote]
+`████████████░░░░░░░░` 60.0% (9 votes)
+
+Blue                               [Vote]
+`████████░░░░░░░░░░░░` 40.0% (6 votes)
+
+────────────────────────────────────────
+[View Results] [Close Poll] [Next Round] [Export]
+```
+
+## Configuration Settings
+
+Access via Admin → Apps → Poll → Settings:
+
+| Setting | Description |
+|---------|-------------|
+| `use-user-name` | Show display names instead of usernames |
+
+## Export Formats
+
+### CSV Export
+```csv
+Poll Results: What's your favorite color?
+Status: Closed
+Total Votes: 15
+
+Option,Votes,Percentage,Voters
+"Red",9,60.0%,"@user1;@user2;@user3"
+"Blue",6,40.0%,"@user4;@user5"
+```
+
+### JSON Export
+```json
+{
+  "poll": {
+    "id": "abc123",
+    "question": "What's your favorite color?",
+    "status": "closed"
+  },
+  "results": {
+    "totalVotes": 15,
+    "options": [
+      { "text": "Red", "votes": 9, "percentage": "60.0%" }
+    ]
+  }
+}
+```
+
+## Development
+
+```bash
+# Watch mode for development
+npm run watch
+
+# Type check
+npm run typecheck
+
+# Deploy update
+rc-apps deploy --update
+```
+
+## License
+
+MIT
