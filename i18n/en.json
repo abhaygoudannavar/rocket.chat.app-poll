@@ -1,4 +1,21 @@
 {
-    "cmd_description": "Create a simple poll",
-    "params_example": "Type your question or fill it up on the form."
+    "cmd_description": "Create an enhanced poll with multiple features",
+    "params_example": "Type your question, or use: /poll export <poll-id>",
+    "modal_title": "Create a Poll",
+    "modal_question": "Question",
+    "modal_description": "Description (optional)",
+    "modal_template": "Template",
+    "modal_duration": "Duration (minutes)",
+    "modal_rounds": "Number of rounds",
+    "poll_expired": "⏱️ This poll has expired",
+    "poll_finished": "✅ Poll finished",
+    "round_label": "Round {current} of {total}",
+    "time_remaining": "⏱️ {time} remaining",
+    "total_votes": "{count} total votes",
+    "error_not_creator": "Only the poll creator can do this",
+    "error_already_finished": "This poll is already finished",
+    "error_poll_expired": "This poll has expired and is now closed",
+    "export_success": "Poll results exported successfully!",
+    "vote_added": "Vote recorded",
+    "vote_removed": "Vote removed"
 }
