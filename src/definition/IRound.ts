@@ -24,4 +24,7 @@ export interface IRound {
 
     /** Unix timestamp when round finished (undefined if active) */
     finishedAt?: number;
+
+    /** Options eliminated in this round */
+    eliminatedOptions?: string[];
 }

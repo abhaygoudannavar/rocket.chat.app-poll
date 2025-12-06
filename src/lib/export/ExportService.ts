@@ -17,79 +17,114 @@ export async function buildReadableSummary(
     } catch {
     }
 
-    lines.push('═'.repeat(50));
-    lines.push('POLL RESULTS');
-    lines.push('═'.repeat(50));
+    const sortedOptions = poll.options
+        .map((option, index) => ({
+            option,
+            index,
+            votes: poll.votes[index]?.quantity || 0,
+        }))
+        .sort((a, b) => b.votes - a.votes);
+
+    const winner = sortedOptions[0];
+    const hasWinner = poll.status !== PollStatus.ACTIVE && poll.totalVotes > 0;
+
+    lines.push('╔' + '═'.repeat(48) + '╗');
+    lines.push('║' + '          📊 POLL RESULTS EXPORT          '.padEnd(48) + '║');
+    lines.push('╚' + '═'.repeat(48) + '╝');
     lines.push('');
-    lines.push(`Question: ${poll.question}`);
+
+    if (hasWinner) {
+        lines.push('🏆 WINNER: ' + winner.option);
+        lines.push('   ' + winner.votes + ' votes (' + ((winner.votes / poll.totalVotes) * 100).toFixed(1) + '%)');
+        lines.push('');
+        lines.push('─'.repeat(50));
+        lines.push('');
+    }
+
+    lines.push('📋 POLL INFORMATION');
+    lines.push('─'.repeat(50));
+    lines.push('');
+    lines.push('  Question:    ' + poll.question);
     if (poll.description) {
-        lines.push(`Description: ${poll.description}`);
+        lines.push('  Description: ' + poll.description);
     }
     lines.push('');
-    lines.push(`Created by: @${creatorUsername}`);
-    lines.push(`Created at: ${formatDate(poll.createdAt)}`);
-    lines.push(`Status: ${poll.status === PollStatus.ACTIVE ? 'Active' : 'Closed'}`);
-    lines.push(`Total Votes: ${poll.totalVotes}`);
-    lines.push(`Vote Mode: ${isSingleChoice ? 'Single choice' : 'Multiple choice'}`);
-    lines.push(`Visibility: ${isAnonymous ? 'Confidential' : 'Open'}`);
+    lines.push('  Created by:  @' + creatorUsername);
+    lines.push('  Created at:  ' + formatDate(poll.createdAt));
+    lines.push('  Status:      ' + (poll.status === PollStatus.ACTIVE ? '🟢 Active' : '🔴 Closed'));
+    lines.push('  Total Votes: ' + poll.totalVotes);
+    lines.push('  Vote Mode:   ' + (isSingleChoice ? 'Single choice' : 'Multiple choice'));
+    lines.push('  Visibility:  ' + (isAnonymous ? '🔒 Confidential' : '👁️ Open'));
 
     if (poll.totalRounds > 1) {
-        lines.push(`Rounds: ${poll.currentRound} of ${poll.totalRounds}`);
+        lines.push('  Rounds:      ' + poll.currentRound + ' of ' + poll.totalRounds);
     }
 
     lines.push('');
-    lines.push('─'.repeat(50));
-    lines.push('OPTIONS & RESULTS');
+    lines.push('📈 OPTIONS & RESULTS (Ranked)');
     lines.push('─'.repeat(50));
     lines.push('');
 
-    poll.options.forEach((option, index) => {
-        const vote = poll.votes[index];
-        const voteCount = vote?.quantity || 0;
+    sortedOptions.forEach((item, rank) => {
+        const vote = poll.votes[item.index];
         const percentage = poll.totalVotes > 0
-            ? ((voteCount / poll.totalVotes) * 100).toFixed(2)
-            : '0.00';
+            ? ((item.votes / poll.totalVotes) * 100).toFixed(1)
+            : '0.0';
 
-        lines.push(`• ${option}`);
-        lines.push(`  Votes: ${voteCount} (${percentage}%)`);
+        const medal = rank === 0 ? '🥇' : rank === 1 ? '🥈' : rank === 2 ? '🥉' : '  ';
+        const bar = buildTextBar(parseFloat(percentage));
+
+        lines.push(medal + ' #' + (rank + 1) + ' ' + item.option);
+        lines.push('     ' + bar + ' ' + percentage + '%');
+        lines.push('     ' + item.votes + ' vote' + (item.votes !== 1 ? 's' : ''));
 
         if (!isAnonymous && vote?.voters && vote.voters.length > 0) {
-            const voterNames = vote.voters.map(v => `@${v.username}`).join(', ');
-            lines.push(`  Voters: ${voterNames}`);
+            const voterNames = vote.voters.slice(0, 5).map(v => '@' + v.username).join(', ');
+            const more = vote.voters.length > 5 ? ' +' + (vote.voters.length - 5) + ' more' : '';
+            lines.push('     Voters: ' + voterNames + more);
         } else if (isAnonymous) {
-            lines.push(`  Voters: hidden (anonymous poll)`);
+            lines.push('     Voters: (hidden - anonymous poll)');
         }
 
         lines.push('');
     });
 
     if (poll.rounds && poll.rounds.length > 0) {
-        lines.push('─'.repeat(50));
-        lines.push('ROUND HISTORY');
+        lines.push('🔄 ROUND HISTORY');
         lines.push('─'.repeat(50));
         lines.push('');
 
         poll.rounds.forEach((round) => {
-            lines.push(`Round ${round.roundNumber}:`);
-            lines.push(`  Total votes: ${round.totalVotes}`);
+            lines.push('  Round ' + round.roundNumber + ':');
+            lines.push('    • Total votes: ' + round.totalVotes);
+            if (round.eliminatedOptions && round.eliminatedOptions.length > 0) {
+                lines.push('    • Eliminated: ' + round.eliminatedOptions.join(', '));
+            }
             if (round.finishedAt) {
-                lines.push(`  Completed at: ${formatDate(round.finishedAt)}`);
+                lines.push('    • Completed: ' + formatDate(round.finishedAt));
             }
             lines.push('');
         });
     }
 
-    lines.push('═'.repeat(50));
-    lines.push(`Exported on: ${formatDate(Date.now())}`);
-    lines.push('═'.repeat(50));
+    lines.push('─'.repeat(50));
+    lines.push('📅 Exported on: ' + formatDate(Date.now()));
+    lines.push('─'.repeat(50));
 
     return lines.join('\n');
 }
 
+function buildTextBar(percentage: number): string {
+    const filled = Math.round(percentage / 10);
+    const empty = 10 - filled;
+    return '█'.repeat(filled) + '░'.repeat(empty);
+}
+
 function formatDate(timestamp: number): string {
     return new Date(timestamp).toLocaleString('en-US', {
+        weekday: 'short',
         year: 'numeric',
-        month: 'long',
+        month: 'short',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
